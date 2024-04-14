@@ -1,5 +1,39 @@
 import flet
 
+dummy_data = {
+    0: {"name": "Apple", "description": "Red and Juicy", "quantity": 5,
+        "price": 1.99},
+    1: {"name": "Bread", "description": "Whole wheat loaf", "quantity": 2,
+        "price":
+            3.49},
+    2: {"name": "Milk", "description": "Organic Whole Milk", "quantity": 1,
+        "price": 2.99},
+    3: {"name": "Carrot", "description": "Fresh and Crunchy", "quantity": 10,
+        "price": 0.99},
+    4: {"name": "Eggs", "description": "Free range Brown eggs", "quantity": 5,
+        "price": 1.99},
+    5: {"name": "Chicken", "description": "Whole wheat loaf", "quantity": 2,
+        "price":
+            3.49},
+    6: {"name": "Banana", "description": "Organic Whole Milk", "quantity": 1,
+        "price": 2.99},
+}
+
+
+class Controller:
+    items = dummy_data
+    counter = len(items)
+
+    @staticmethod
+    def get_items():
+        return Controller.items
+
+    @staticmethod
+    def add_items(item):
+        Controller.items[Controller.counter] = item
+        Controller.counter += 1
+
+
 header_style = {
     "height": 60,
     "bgcolor": "#081d33",
@@ -24,7 +58,7 @@ def search_field(function):
 
 def search_bar(control):
     return flet.Container(
-        width=350,
+        #width=350,
         bgcolor=flet.colors.WHITE,
         border_radius=6,
         opacity=0,
@@ -48,8 +82,9 @@ def search_bar(control):
 class Header(flet.Container):
     ''' header class'''
 
-    def __init__(self):
+    def __init__(self, datatable):
         super().__init__(**header_style, on_hover=self.toggle_search)
+        self.datable = datatable
         self.search_value = search_field(self.filter_dt_rows)
         self.search = search_bar(self.search_value)
         self.name = flet.Text("Line Indent", color='white')
@@ -62,32 +97,139 @@ class Header(flet.Container):
     def toggle_search(self, e):
         self.search.opacity = 1 if e.data == 'true' else 0
         self.search.update()
+
     def filter_dt_rows(self, e):
         ...
 
+
 form_style = {
-    "height": 60,
     "bgcolor": "white10",
     "border_radius": 8,
+    "border": flet.border.all(1, '#ebebeb'),
     "padding": 15,
 }
+
+
+def text_field():
+    return flet.TextField(
+        border_color="transparent",
+        height=20,
+        text_size=13,
+        content_padding=0,
+        cursor_color='black',
+        cursor_width=1,
+        cursor_height=18,
+        color='black'
+    )
+
+
+def text_field_container(expand, name, control):
+    return flet.Container(
+        expand=expand,
+        height=45,
+        bgcolor='#ebebeb',
+        border_radius=6,
+        padding=8,
+        content=flet.Column(
+            spacing=1,
+            controls=[
+                flet.Text(
+                    value=name,
+                    size=9,
+                    color='black',
+                    width='bold',
+                ),
+                control
+            ]
+        )
+    )
+
+
 class Form(flet.Container):
+    def __init__(self, datatable):
+        super().__init__(**form_style)
+        self.datatable = datatable
+        self.row1_value = text_field()
+        self.row2_value = text_field()
+        self.row3_value = text_field()
+        self.row4_value = text_field()
+
+        self.row1 = text_field_container(
+            True, "Row one", self.row1_value)
+        self.row2 = text_field_container(
+            3, "Row two", self.row2_value)
+        self.row3 = text_field_container(
+            1, "Row three", self.row3_value)
+        self.row4 = text_field_container(
+            1, "Row four", self.row4_value)
+
+        self.submit = flet.ElevatedButton(
+            text='Submit',
+            style=flet.ButtonStyle(
+                shape={"": flet.RoundedRectangleBorder(radius=8)}),
+            on_click=self.submit_data
+        )
+
+        self.content = flet.Column(
+            expand=True,
+            controls=[
+                flet.Row(controls=[self.submit], alignment='end'),
+                flet.Row(controls=[self.row2, self.row3, self.row4]),
+                flet.Row(controls=[self.row1]),
+            ],
+        )
+
+    def submit_data(self, e):
+        ...
+
+    def clear_entries(self):
+        self.row1_value.value = ""
+        self.row2_value.value = ""
+        self.row3_value.value = ""
+        self.row4_value.value = ""
+
+        self.content.update()
+
+
+column_names = [
+    "Column one", "Column two", "Column three", "Column four",
+]
+
+data_table_style = {
+    "expand": True,
+    "border_radius": 8,
+    "border": flet.border.all(2, "#ebebeb"),
+    "horizontal_lines": flet.border.BorderSide(1, '#ebebeb'),
+    "columns": [
+        flet.DataColumn(
+            flet.Text(index, size=12, color='black', weight='bold')
+        )
+        for index in column_names
+    ]
+}
+
+
+class DataTable(flet.DataTable):
     def __init__(self):
-        super().__init__()
+        super().__init__(**data_table_style)
+
+
 def main(page: flet.Page):
     page.bgcolor = '#fdfdfd'
-    header = Header()
+    table = DataTable()
+    header = Header(datatable=table)
+    form = Form(datatable=table)
     page.add(
         flet.Column(
             expand=True,
             controls=[
                 header,
                 flet.Divider(height=2, color=flet.colors.TRANSPARENT),
-                # forms
+                form,
                 flet.Column(
                     scroll=flet.ScrollMode.HIDDEN,
                     expand=True,
-                    controls=[]
+                    controls=[flet.Row(controls=[table])],
                 )
             ]
         )
