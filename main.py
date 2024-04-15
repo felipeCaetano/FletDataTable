@@ -58,8 +58,8 @@ def search_field(function):
 
 def search_bar(control):
     return flet.Container(
-        #width=350,
-        bgcolor=flet.colors.WHITE,
+        # width=350,
+        bgcolor=flet.colors.WHITE10,
         border_radius=6,
         opacity=0,
         animate_opacity=300,
@@ -99,7 +99,15 @@ class Header(flet.Container):
         self.search.update()
 
     def filter_dt_rows(self, e):
-        ...
+        for data_rows in self.datable.rows:
+            data_cell = data_rows.cells[0]
+            data_rows.visible = (
+                True
+                if e.control.value.lower() in data_cell.content.value.lower()
+                else False
+            )
+
+            data_rows.update()
 
 
 form_style = {
@@ -173,14 +181,22 @@ class Form(flet.Container):
         self.content = flet.Column(
             expand=True,
             controls=[
-                flet.Row(controls=[self.submit], alignment='end'),
-                flet.Row(controls=[self.row2, self.row3, self.row4]),
                 flet.Row(controls=[self.row1]),
+                flet.Row(controls=[self.row2, self.row3, self.row4]),
+                flet.Row(controls=[self.submit], alignment='end'),
             ],
         )
 
     def submit_data(self, e):
-        ...
+        data = {
+            "col1": self.row1_value.value,
+            "col2": self.row2_value.value,
+            "col3": self.row3_value.value,
+            "col4": self.row4_value.value
+        }
+        Controller.add_items(data)
+        self.clear_entries()
+        self.datatable.fill_datatable()
 
     def clear_entries(self):
         self.row1_value.value = ""
@@ -212,6 +228,19 @@ data_table_style = {
 class DataTable(flet.DataTable):
     def __init__(self):
         super().__init__(**data_table_style)
+        self.df = Controller.get_items()
+
+    def fill_datatable(self):
+        self.rows = []
+        for values in self.df.values():
+            data = flet.DataRow()
+            data.cells = [
+                flet.DataCell(
+                    flet.Text(value, color='black')
+                ) for value in values.values()
+            ]
+            self.rows.append(data)
+        self.update()
 
 
 def main(page: flet.Page):
@@ -234,6 +263,7 @@ def main(page: flet.Page):
             ]
         )
     )
+    table.fill_datatable()
 
 
 flet.app(main)
